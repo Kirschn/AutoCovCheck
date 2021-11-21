@@ -1,0 +1,5 @@
+{
+    "valuesetDir": "./ehn-dcc-valuesets/",
+    "ruleDir": "./dgc-business-rules-testdata/",
+    "ruleCountry": "DE"
+}

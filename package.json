@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@peculiar/x509": "^1.6.0",
+    "certlogic-js": "^1.0.3",
+    "dcc-utils": "^0.4.0"
+  },
+  "type": "module"
+}

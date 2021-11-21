@@ -1,0 +1,9 @@
+[submodule "dgc-testdata"]
+	path = dgc-testdata
+	url = https://github.com/eu-digital-green-certificates/dgc-testdata
+[submodule "ehn-dcc-valuesets"]
+	path = ehn-dcc-valuesets
+	url = https://github.com/ehn-dcc-development/ehn-dcc-valuesets
+[submodule "dgc-business-rules-testdata"]
+	path = dgc-business-rules-testdata
+	url = https://github.com/eu-digital-green-certificates/dgc-business-rules-testdata
