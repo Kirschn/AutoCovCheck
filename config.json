@@ -12,6 +12,11 @@
     "RATIdentifier": "LP217198-3",
     "negativeTestInfo": "260415000",
     "stateMachineConfig": {
-      "debug": true
+      "debug": true,
+      "raspberryPi": {
+        "installed": false,
+        "doorRelaisGPIO": 26,
+        "doorOpenTime": 5000
+      }
     }
 }
