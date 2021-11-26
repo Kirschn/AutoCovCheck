@@ -1,5 +1,17 @@
 {
     "valuesetDir": "./ehn-dcc-valuesets/",
     "ruleDir": "./dgc-business-rules-testdata/",
-    "ruleCountry": "DE"
+    "ruleCountry": "DE",
+    "webserverPort": 8080,
+    "webserverHttpsPort": 8443,
+    "database": {
+        "dialect": "sqlite",
+        "storage": "database.sqlite"
+      },
+    "NAATIdentifier": "LP6464-4",
+    "RATIdentifier": "LP217198-3",
+    "negativeTestInfo": "260415000",
+    "stateMachineConfig": {
+      "debug": true
+    }
 }

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="scripts/bootstrap/css/bootstrap.min.css">
+    <script src="scripts/bootstrap/js/bootstrap.min.js"></script>
+    <script src="scripts/jquery/jquery.min.js"></script>
+    <script src="scripts/qr-scanner/qr-scanner.umd.min.js"></script>
+
+    <title>
+        AutoCovCheck Input Panel
+    </title>
+    <script>
+        QrScanner.WORKER_PATH = 'scripts/qr-scanner/qr-scanner-worker.min.js'
+        var currentCode = "";
+        function qrCov() {
+            var video = document.getElementById("qrVideo");
+            const qrScanner = new QrScanner(video,
+                result => {
+                    // scanned a qr code
+                    // check for direct duplicates!
+                    if (currentCode != result) {
+                        // new qr code
+                        console.log(result);
+                        $.ajax({
+                            type: "POST",
+                            url: "/api/check/dcc",
+                            data: {
+                                "base45": result
+                            },
+                            success: response => {
+                                console.log(response)
+                            }
+                        })
+                    }
+                    currentCode = result;
+
+                },
+                error => {
+                    
+                },
+                video => {
+                    // calculate scan regon
+                    return {
+                        x: Math.floor(video.videoWidth * 0.1),
+                        y: Math.floor(video.videoHeight * 0.1),
+                        width: Math.floor(video.videoWidth * 0.8),
+                        height: Math.floor(video.videoHeight * 0.8),
+                        downScaledWidth: Math.floor(video.videoWidth / 2),
+                        downScaledHeight: Math.floor(video.videoHeight / 2)
+                    }
+                });
+
+
+            qrScanner.start();
+        }
+        function updateStatus() {
+            
+            function createTable(title, obj, level) {
+                let appendAfter = [];
+                console.log("tableCreate Called", title)
+                let table = $("<table></table>")
+                table.addClass("table")
+                let thead = $("<thead></thead>");
+                let tbody = $("<tbody></tbody>");
+                thead.html("<tr><th>key</th><th>value</th></tr>");
+                table.append(thead);
+                let newRow = $("<div></div>");
+                    newRow.addClass("row");
+                    let titleObj = $("<h" + level + "></h"+level+">");
+                    titleObj.text(title);
+                    newRow.append(titleObj);
+                for (var i in obj) {
+                    if (typeof obj[i] == "object" && obj[i] != null) {
+                        appendAfter.push(createTable(i, obj[i], level + 1))
+                    } else {
+                        let trow = $("<tr></tr>")
+                        let tdKey = $("<td></td>");
+                        tdKey.text(i);
+                        
+                        let tdVal = $("<td></td>")
+                        tdVal.text(obj[i]);
+                        trow.append(tdKey);
+                        trow.append(tdVal)
+                        tbody.append(trow);
+                    }
+                }
+                table.append(tbody);
+
+                newRow.append(table);
+                appendAfter.forEach(curr => {
+                    newRow.append(curr)
+                })
+                newRow.append("<br><br>")
+                return newRow
+            }
+            $.get("/api/status", data => {
+                data = JSON.parse(data);
+                let infos = $("#infos");
+                infos.html("");
+                if (data.config.debug) {
+                    infos.append(createTable("Infos", data, 2))
+                }
+            })
+        }
+        setInterval(updateStatus, 500);
+
+    </script>
+</head>
+
+<body onload="qrCov()">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-5">
+                <span id="infos"></span>
+            </div>
+            <div class="col-7 bg-secondary">
+                <h2>
+                    <video id="qrVideo" style="width: 100%"></video>
+                </h2>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

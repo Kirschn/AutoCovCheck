@@ -37,19 +37,72 @@ export default class verifyCerts {
 
     async getDccAndCheckValidity(qrCodeData) {
         console.log("Checking new certificate...")
-        const dcc = await DCC.fromImage("/home/wolff/covcert.jpg");
-        const verified = await this.checkCert(dcc);
+        try {
+            const dcc = await DCC.fromRaw(qrCodeData);
+            const verified = await this.checkCert(dcc);
 
-        console.log("Certificate", (verified.valid) ? "is" : "is not", "valid:", (!verified.valid) ? verified.reason : "");
-        console.log("Name: " + dcc.payload.nam.gn.substr(0, 1) + ". " + dcc.payload.nam.fn);
-        console.log("Date of Birth: " + dcc.payload.dob)
-        console.log("Cert included these Vaccinations:");
-        dcc.payload.v.forEach((v) => {
-            console.log("Date:", v.dt, "Issuer:", v.is)
-        });
-        dcc.valid = verified.valid;
+            console.log("Certificate", (verified.valid) ? "is" : "is not", "valid:", (!verified.valid) ? verified.reason : "");
+            console.log("Name: " + dcc.payload.nam.gn.substr(0, 1) + ". " + dcc.payload.nam.fn);
+            console.log("Date of Birth: " + dcc.payload.dob)
 
-        return dcc;
+            // Map Data to Valuesets
+
+            
+
+            var buffer = {}
+
+            if (dcc.payload.r != undefined) {
+                var buffer = {...dcc._payload.r[0]};
+                dcc.type = "recovery";
+            } else if (dcc.payload.t != undefined) {
+                var buffer = {...dcc._payload.t[0]};
+                if (dcc._payload.t[0].tr != global.config.negativeTestInfo){
+                    buffer = undefined;
+                } else if (dcc._payload.t[0].tt == global.config.NAATIdentifier) {
+                    dcc.type = "naat";
+                } else if (dcc._payload.t[0].tt == global.config.RATIdentifier) {
+                    dcc.type = "rat";
+                }
+            } else if (dcc.payload.v != undefined) {
+                var buffer = {...dcc._payload.v[0]};
+                dcc.type = "vaccination";
+            }
+
+            if (buffer == undefined)
+                throw Error("Fake Cert");
+
+            
+            let valSets = ["covid-19-lab-test-manufacturer-and-name", "covid-19-lab-result", 
+            "covid-19-lab-test-type", "vaccines-covid-19-auth-holders", "vaccines-covid-19-names"]
+            for (var i in buffer) {
+                valSets.forEach((valSet => {
+                    //console.log(buffer[i],global.valueSets[valSet])
+                    if (global.valueSetsOrig[valSet][buffer[i]] !== undefined) {
+                        
+                        buffer[i] = global.valueSetsOrig[valSet][dcc._payload.v[0][i]].display
+                    }
+                }))
+                    
+                
+            }
+
+
+            dcc.valid = verified.valid;
+            dcc.verification = verified;
+            return {dcc: dcc, vaccinationData: buffer};
+
+        } catch (e) {
+            throw e
+            return { dcc: {
+                valid: false,
+                verification: {
+                    reason: "QR Code Invalid"
+                }
+            }}
+        }
+
+
+
     }
     async fetchTrustList(url) {
         const response = await fetch(url);
@@ -83,11 +136,11 @@ export default class verifyCerts {
             return { valid: true, cert: cert };
         } catch (e) {
             if (e instanceof cosette.sign.SignatureMismatchError) {
-                return {valid: false, reason: "SignatureMismatchError"};
-              }
-              if (typeof cert === 'undefined') {
-                return {valid: false, reason: "SigningAgencyNotFound"}
-              }
+                return { valid: false, reason: "SignatureMismatchError" };
+            }
+            if (typeof cert === 'undefined') {
+                return { valid: false, reason: "SigningAgencyNotFound" }
+            }
         }
 
     }
@@ -100,13 +153,14 @@ export default class verifyCerts {
     }
     async loadValueSets() {
         global.valueSets = {}
+        global.valueSetsOrig = {}
         let availableSets = fs.readdirSync(global.config.valuesetDir);
         availableSets.forEach((set) => {
             if (set.indexOf(".json") == -1)
                 return;
             let content = JSON.parse(fs.readFileSync(global.config.valuesetDir + set, "utf8"))
             if (content.valueSetId != undefined) {
-                global.valueSets[content.valueSetId + "-orig"] = content.valueSetValues;
+                global.valueSetsOrig[content.valueSetId ] = content.valueSetValues;
                 let arr = [];
                 for (var i in content.valueSetValues) {
                     arr.push(i)
@@ -119,16 +173,16 @@ export default class verifyCerts {
     }
     async checkRules(dcc) {
         let validationClock = new Date().toISOString();
-        let errors = []
+        let result = [{"errors": 0}]
         for (var rule in global.rules) {
             let ruleResult = global.rules[rule].evaluateDCC(dcc, { validationClock: validationClock, valueSets: global.valueSets })
-            
-            
-            if (!ruleResult) {
-                errors.push(rule);
-            }
+            result.push({
+                "ruleId": rule,
+                "result": ruleResult
+            })
+            if (!ruleResult) {result[0]["errors"]++;}
         }
-        return (errors === [] ? null : errors)
+        return (result[0] == undefined) ? null : result
     }
 
 
