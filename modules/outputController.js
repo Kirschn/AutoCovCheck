@@ -1,4 +1,7 @@
+import fs from 'fs';
 var pigpio = null;
+global.config = JSON.parse(fs.readFileSync("config.json"));
+
 if (global.config.stateMachineConfig.raspberryPi.installed) {
     import("pigpio").then(module => {
         pigpio = module
