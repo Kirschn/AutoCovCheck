@@ -23,13 +23,17 @@ export default class verifyCerts {
         console.log("Loading Digital Covid Certificate Validator...");
         console.log("This may take a while")
         try {
-            trustList = JSON.parse(fs.readFileSync("trustList.json", "utf8"))
+            trustList = JSON.parse(fs.readFileSync("trustList.json", "utf8"));
+
+            trustList = this.convertTrustList(trustList);
 
         } catch (e) {
-            this.fetchTrustList("https://de.dscg.ubirch.com/trustList/DSC/");
+            this.fetchTrustList("https://de.dscg.ubirch.com/trustList/DSC/").then(() => {
+
+            trustList = this.convertTrustList(trustList);
+            });
 
         }
-        trustList = this.convertTrustList(trustList);
         console.log("Loaded all valid certificate issuers")
         return;
     }
