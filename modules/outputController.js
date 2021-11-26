@@ -1,12 +1,7 @@
 import fs from 'fs';
-var pigpio = null;
+import pigpio from 'pigpio';
 global.config = JSON.parse(fs.readFileSync("config.json"));
 
-if (global.config.stateMachineConfig.raspberryPi.installed) {
-    import("pigpio").then(module => {
-        pigpio = module
-    })
-}
 
 export default class covcheckOutputModule {
     constructor() {
@@ -15,15 +10,17 @@ export default class covcheckOutputModule {
             this.doorPin = new this.Gpio(global.config.stateMachineConfig.raspberryPi.doorRelaisGPIO, {
                 "mode": this.Gpio.OUTPUT
             });
+
+            this.piWriteDoor(true);
         }
 
     }
     allowEntrance(stateMachine) {
         console.log("Allowing Entrance")
         stateMachine.hold = true;
-        this.piWriteDoor(true);
+        this.piWriteDoor(false);
         setTimeout(() => {
-            this.piWriteDoor(false);
+            this.piWriteDoor(true);
             stateMachine.reset();
             stateMachine.holf = false;
         }, global.config.stateMachineConfig.raspberryPi.doorOpenTime)
