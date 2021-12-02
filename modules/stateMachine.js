@@ -1,25 +1,37 @@
 
 export default class covcheckStateMachine {
-    constructor(requiredStates = {}) {
+    constructor(requiredStates = {baseCheck: false, extendedCheck: false}) {
         this.states = {};
         this.requiredStates = requiredStates;
         this.rewrites = {}
         this.hold = false;
         this.lastInput = {type: null};
+        this.event = null;
+        this.person = {
+            fn: null,
+            gn: null,
+            dob: null
+        }
     }
     checkState() {
         let passed = true;
         for (var i in this.requiredStates) {
-            if (this.states[i] !== this.requiredStates[i]) {
+            if (this.requiredStates[i] && this.states[i] !== this.requiredStates[i]) {
                 passed = false;
             }
         }
         if (passed && !this.hold) {
             this.outputModule.allowEntrance(this);
+            if (this.event.logPersons) {
+                this.event.createEventParticipant(this.person).then(participant => {
+                    console.log("Added", this.person.gn, "to database")
+                });
+            }
         }
         return passed;
     }
     enterState(index, value) {
+        console.log("State machine:", index, "=", value)
         if (this.hold) {
             return null;
         }
@@ -36,8 +48,14 @@ export default class covcheckStateMachine {
         }
     }
     requiredStatesFromEvent(event) {
+
         if (!event instanceof this.db.event)
             return;
+        this.event = event;
+        this.reset();
+        this.rewrites = {};
+        this.requiredStates = {"baseCheck": false, "extendedCheck": false}
+        
         if (event.entranceWithVac) {
             this.rewrites["vaccination"] = "baseCheck";
             this.requiredStates["baseCheck"] = true;
@@ -46,15 +64,15 @@ export default class covcheckStateMachine {
             this.rewrites["recovery"] = "baseCheck";
             this.requiredStates["baseCheck"] = true;
         }
-        if (event.entranceWithAntigen) {
+        if (event.entranceWithRAT) {
             this.rewrites["rat"] = "baseCheck";
             this.requiredStates["baseCheck"] = true;
         }
-        if (event.entranceWithPcr) {
+        if (event.entranceWithNAAT) {
             this.rewrites["naat"] = "baseCheck"
             this.requiredStates["baseCheck"] = true;
         }
-        if (event.entranceNeedsAntigen) {
+        if (event.entranceNeedsRAT) {
             this.rewrites["rat"] = "extendedCheck"
             this.requiredStates["extendedCheck"] = true;
         } 
@@ -72,6 +90,11 @@ export default class covcheckStateMachine {
     reset() {
         this.states = {};
         this.lastInput = {type: null}
+        this.person = {
+            gn: null,
+            fn: null,
+            db: null
+        }
     }
 
 }

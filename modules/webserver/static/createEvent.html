@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="scripts/bootstrap/css/bootstrap.min.css">
+    <script src="scripts/bootstrap/js/bootstrap.min.js"></script>
+    <script src="scripts/jquery/jquery.min.js"></script>
+
+    <title>
+        AutoCovCheck Create Event
+    </title>
+
+</head>
+
+<body onload="">
+    <div class="container">
+        <div class="row">
+            <div class="col-7">
+                <h2>Create new Event</h2>
+                <form>
+                    <div class="mb-3">
+                        <label for="eventName">Name:</label>
+                        <input type="text" class="form-control event" placeholder="My cool concert" id="eventName" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="eventStart">Start Time:</label>
+                        <input type="datetime-local" class="form-control event" id="eventStart" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="entranceTypeName">Name:</label>
+                        <input type="text" class="form-control event"
+                            placeholder="2G+ (vaccinated or recovered with additional antigen test)"
+                            id="entranceTypeName" />
+
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input event" id="eventIsActive" checked />
+                        <label for="eventIsActive">Set event as active (will disable all other events)</label>
+                    </div>
+                    <div class="mb-3">
+                        <br>
+                        <h3>Rules</h3>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input event" id="entranceWithVac" checked />
+                        <label for="entranceWithVac">Allow Entrance with a valid vaccination certificate</label>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input event" id="entranceWithRecov" checked />
+                        <label for="entranceWithRecov">Allow Entrance with a valid recovery certificate</label>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input event" id="entranceWithRAT" />
+                        <label for="entranceWithRAT">Allow Entrance with a valid antigen test certificate</label>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input event" id="entranceWithNAAT" checked
+                            aria-describedby="entranceWithNAATHelp" />
+                        <label for="entranceWithNAAT">Allow Entrance with a valid NAAT-Test certificate</label>
+                        <div id="entranceWithNAATHelp" class="form-text">A PCR Test is a type of NAAT-Test.</div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input event" id="entranceNeedsRAT" />
+                        <label for="entranceNeedsRAT">Every Person needs a valid antigen test certificate
+                            additionally</label>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input event" id="logPersons" />
+                        <label for="logPersons">Keep record of who is entering the event</label>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input event" id="checkIdCard" />
+                        <label for="entranceWithVac">Compare the identitiy of Test Certificates with the identitiy on a
+                            persons ID Card (not yet implemented)</label>
+                    </div>
+                    <div class="mb-3">
+                        <label for="maxRATAge">Maximum Age for RAT Test (hours):</label>
+                        <input type="text" class="form-control event" placeholder="24" value="24" id="maxRATAge" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="maxNAATAge">Maximum Age for NAAT Test (hours):</label>
+                        <input type="text" class="form-control event" placeholder="72" value="72" id="maxNAATAge" />
+                    </div>
+                    <div class="mb-3">
+                        <input id="submit" type="button" class="form-control btn btn-primary" value="Create">
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+    <script>
+        $("#submit").click(() => {
+            let data = {
+
+            }
+            $(".event").each((index, elem) => {
+                if ($(elem).hasClass("form-check-input")) {
+                    data[$(elem).attr("id")] = $(elem).is(":checked")
+                } else {
+                    data[$(elem).attr("id")] = $(elem).val();
+                }
+
+            })
+            console.log(data)
+            $.ajax({
+                type: "POST",
+                url: "/api/createEvent",
+                data: data,
+                success: response => {
+                    console.log(response);
+                    window.location.href="/eventOverview.html"
+                }
+            })
+        })
+    </script>
+</body>
+
+</html>

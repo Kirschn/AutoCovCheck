@@ -2,7 +2,7 @@
 import express from 'express';
 import http from 'http';
 import https from 'https';
-import fs from 'fs';
+import fs, { stat } from 'fs';
 import session from 'express-session'
 var globStateMachine;
 var globDb;
@@ -50,11 +50,37 @@ export default class covcheckWebserver {
                         dcc.rules = await this.dccVerifier.checkRules(dcc.dcc.payload)
                         if (dcc.rules[0]["errors"] === 0 && dcc.dcc.valid) {
                             dcc.validNoCovid = true;
-                            stateMachines[req.session.id].enterState(dcc.dcc.type, true)
+                            console.log("Valid Rules, No Covid!")
+                            let person = {
+                                "fn": dcc.dcc.payload.nam.fnt,
+                                "gn": dcc.dcc.payload.nam.gnt,
+                                "dob": dcc.dcc.payload.dob 
+                            }
+                            if (stateMachines[req.session.id].person.fn != null) {
+                                if (stateMachines[req.session.id].person.gn == person.gn && 
+                                    stateMachines[req.session.id].person.dob == person.dob) {
+                                    stateMachines[req.session.id].person 
+                                    console.log("Entering into stateMachine")
+                                    stateMachines[req.session.id].enterState(dcc.dcc.type, true);
+                                    response = JSON.stringify(dcc);
+                                } else {
+                                    // Person mismatch
+                                    response = {"error": "name_mismatch"}
+                                }
+                            } else {
+                                console.log("Entering into stateMachine")
+                                    stateMachines[req.session.id].enterState(dcc.dcc.type, true);
+                                    response = JSON.stringify(dcc);
+                            }
+                            
+                        } else {
+                            stateMachines[req.session.id].enterState(dcc.dcc.type, false);
                         }
+                    } else {
+                        stateMachines[req.session.id].enterState(dcc.dcc.type, false);
                     }
                     stateMachines[req.session.id].lastInput = {"type": "dcc", dcc: dcc}
-                    response = JSON.stringify(dcc);
+                    
                 } catch (e) {
                     console.log(e);
                     response = { "error": "Invalid QR" }
@@ -63,6 +89,69 @@ export default class covcheckWebserver {
             res.send(response);
             res.end();
         });
+        this.app.post("/api/createEvent", async (req, res) => {
+            if (req.body.eventIsActive)
+                await this.db.event.update({"eventIsActive": false}, {where: {"eventIsActive": true}});
+            let newEvent = await this.db.event.create(req.body);
+            if (req.body.eventIsActive) {
+                this.registerEvent(newEvent.dataValues);
+                for (var i in stateMachines) {
+                    stateMachines[i].requiredStatesFromEvent(newEvent.dataValues)
+                }
+            }
+            res.type("json")
+            res.status(200).send(JSON.stringify(newEvent.dataValues));
+            res.end();
+        });
+        this.app.get("/api/eventList", async (req, res) => {
+            if (req.query.cursor == undefined) {
+                req.query.cursor = 0;
+            }
+            if (req.query.limit == undefined) {
+                req.query.limit = 10;
+            }
+            let {totalCount, rows} = await this.db.event.findAndCountAll({
+                where: {},
+                limit: req.query.limit,
+                offset: req.query.cursor,
+                order: [["id", "DESC"]]
+            });
+            let response = {
+                data: rows,
+                nextCursor: parseInt(req.query.cursor) + parseInt(req.query.limit),
+                limit: req.query.limit,
+                totalCount: totalCount
+            }
+            res.type("json")
+            res.send(JSON.stringify(response, null, 2))
+            res.end();
+        });
+        this.app.post("/api/deleteEvent", async (req, res) => {
+            if (req.body.id == undefined) {
+                res.status(400);
+                res.end();
+                return;
+            };
+            let event = await this.db.event.findByPk(req.body.id);
+            if (!(event instanceof this.db.event)) {
+                res.status(400);
+                res.end();
+            }
+            await event.destroy();
+        }),
+        this.app.post("/api/modifyEvent", async (req, res) => {
+
+        })
+        this.app.get("/api/participantList", async (req, res) => {
+            let event = await this.db.event.findByPk(req.query.id);
+            let participants = await event.getParticipants();
+            res.type("json")
+            res.send(JSON.stringify({
+                event: event,
+                participants: participants
+            }, null, 2));
+            res.end();
+        })
         this.app.get("/api/status", async (req, res) => {
 
 
@@ -82,7 +171,8 @@ export default class covcheckWebserver {
                 hold: stateMachines[stateMachineIndex].hold
             },
             event: this.event,
-            config: global.config.stateMachineConfig
+            config: global.config.stateMachineConfig,
+            debug: global.config.debug
         };
         //console.log(status)
         return status;

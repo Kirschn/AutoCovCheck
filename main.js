@@ -19,18 +19,7 @@ async function boot() {
     //verify.check();
     
     await eventDb.loadModel()
-    eventDb.event.create({
-        eventName: "Testevent",
-        entranceTypeName: "2G",
-        entranceWithVac: true,
-        entranceWithRecov: true,
-        entranceWithRAT: false,
-        entranceWithNAAT: false,
-        entranceNeedsRAT: false,
-        maxRATAge: 24,
-        checkIdCard: false,
-        logPersons: false
-    })
+    
     verify.loadRules(global.config.ruleCountry);
     verify.loadValueSets();
 

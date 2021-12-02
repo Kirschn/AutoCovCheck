@@ -12,6 +12,15 @@
     <title>
         AutoCovCheck Input Panel
     </title>
+    <style>
+        .checks {
+            font-size: 30pt;
+        }
+        .bigState {
+            font-size: 70pt;
+            text-align: center;
+        }
+    </style>
     <script>
         QrScanner.WORKER_PATH = 'scripts/qr-scanner/qr-scanner-worker.min.js'
         var currentCode = "";
@@ -100,9 +109,67 @@
                 data = JSON.parse(data);
                 let infos = $("#infos");
                 infos.html("");
-                if (data.config.debug) {
-                    infos.append(createTable("Infos", data, 2))
+
+                $("#eventName").text(data.event.eventName);
+                $("#entranceTypeName").text(data.event.entranceTypeName)
+                if (data.stateMachine.finished) {
+                    $("#checkList").hide();
+                    $("#stateMachineFinished").show();
+                } else {
+                    $("#checkList").show();
+                    $("#stateMachineFinished").hide();
                 }
+                $(".checks").each((index, elem) => {
+                    if (data.stateMachine.requiredStates[$(elem).attr("id")] == true) {
+                        $(elem).show()
+                    } else {
+                        $(elem).hide();
+                    }
+                })
+                let hasData = false;
+                for (var i in data.stateMachine.states) {
+                    hasData = true;
+                    switch (i) {
+                        case "baseCheck":
+                            $(".baseCheckNotEntered").hide();
+                            if (data.stateMachine.states[i]){
+                                $(".baseCheckValid").show();
+                            } else {
+                                $(".baseCheckInvalid").show();
+                            }
+                            break;
+                        case "extendedCheck": 
+                            $(".extendedCheckNotEntered").hide();
+                            if (data.stateMachine.states[i]){
+                                $(".extendedCheckValid").show();
+                            } else {
+                                $(".extendedCheckInvalid").show();
+                            }
+                            break;
+                        case "idCardCheck":
+                            $(".idCardCheckNotEntered").hide();
+                            if (data.stateMachine.states[i]){
+                                $(".idCardCheckValid").show();
+                            } else {
+                                $(".idCardCheckInvalid").show();
+                            }
+                            break;
+                        default: 
+                        break;
+                    }
+                }
+                if (!hasData) {
+                    $(".idCardCheckNotEntered").show();
+                    $(".idCardCheckInvalid").hide();
+                    $(".idCardCheckValid").hide();
+                    $(".extendedCheckNotEntered").show();
+                    $(".extendedCheckInvalid").hide();
+                    $(".extendedCheckValid").hide();
+                    $(".baseCheckNotEntered").show();
+                    $(".baseCheckInvalid").hide();
+                    $(".baseCheckValid").hide();
+                }
+                
             })
         }
         setInterval(updateStatus, 500);
@@ -114,9 +181,63 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-5">
+                <div class="row">
+                    <div class="col">
+                        <h1 id="eventName"></h1>
+                    </div>
+                    
+                    
+                </div>
+                <div class="row mt-1">
+                    <div class="col">
+                        <h4 id="entranceTypeName"></h4>
+                    </div>
+                </div>
+                <div class="row mt-2 table-responsive">
+
+                
+                <table class="table table-bordered" id="checkList">
+                <thead>
+                    <tr>
+                        <th>
+                            Status
+                        </th>
+                        <th>
+                            
+                        </th>
+                    </tr>
+                </thead>
+                    
+                <tr id="baseCheck" class="checks" style="display: none;">
+                    
+                    <td class="baseCheckNotEntered">❓</td><td class="baseCheckNotEntered"> Bitte zeig dein 2G Zertifikat</td>
+                    <td class="baseCheckValid">✅ </td><td class="baseCheckValid">Zertifikat akzeptiert</td>
+                    <td class="baseCheckInvalid">❌ </td><td class="baseCheckInvalid">Zertifikat nicht akzeptiert</td>
+                    
+                </tr>
+                <tr id="extendedCheck" class="checks" style="display: none;">
+                    
+                    <td class="extendedCheckNotEntered">❓</td><td class="extendedCheckNotEntered">Bitte zeig dein Testzertifikat</td></span>
+                    <td class="extendedCheckValid" >✅</td><td class="extendedCheckValid">Test akzeptiert</td></span>
+                    <td class="extendedCheckInvalid">❌</td><td class="extendedCheckInvalid">Test nicht akzeptiert</td></span>
+                    
+                </tr>
+                <tr id="idCardCheck" class="checks" style="display: none;">
+                    
+                        <td class="idCardCheckNotEntered">❓</td>
+                        <td class="idCardCheckValid">✅</td>
+                        <td class="idCardCheckInvalid">❌</td>
+                    
+                </tr>
+                </table>
+            </div>
+                <div id="stateMachineFinished" class=" row bigState" style="display: none;">
+                    ✅<br>
+                    Bitte tritt ein!
+                </div>
                 <span id="infos"></span>
             </div>
-            <div class="col-7 bg-secondary">
+            <div class="col bg-secondary">
                 <h2>
                     <video id="qrVideo" style="width: 100%"></video>
                 </h2>

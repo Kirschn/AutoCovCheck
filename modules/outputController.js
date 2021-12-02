@@ -1,6 +1,12 @@
 import fs from 'fs';
-import pigpio from 'pigpio';
 global.config = JSON.parse(fs.readFileSync("config.json"));
+try {
+    var pigpio = await import("pigpio");
+} catch (e) {
+    console.log("Pigpio not found, disabling raspberrypi output")
+    global.config.stateMachineConfig.raspberryPi.installed = false;
+}
+
 
 
 export default class covcheckOutputModule {
@@ -22,7 +28,7 @@ export default class covcheckOutputModule {
         setTimeout(() => {
             this.piWriteDoor(true);
             stateMachine.reset();
-            stateMachine.holf = false;
+            stateMachine.hold = false;
         }, global.config.stateMachineConfig.raspberryPi.doorOpenTime)
     }
     piWriteDoor(val) {

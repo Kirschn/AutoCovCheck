@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="scripts/bootstrap/css/bootstrap.min.css">
+    <script src="scripts/bootstrap/js/bootstrap.min.js"></script>
+    <script src="scripts/jquery/jquery.min.js"></script>
+
+    <title>
+        AutoCovCheck Data Panel
+    </title>
+    <script>
+        let currentCursor = 0;
+        let currentLimit = 10;
+        function nextPage() {
+            currentCursor += currentLimit;
+            getEvents(currentCursor, currentLimit)
+        }
+        function lastPage() {
+            if ((currentCursor - currentLimit) < 0)
+                return;
+            currentCursor -= currentLimit;
+            getEvents(currentCursor, currentLimit)
+        }
+        function getEvents(cursor = 0, limit = 10) {
+            $.get("/api/eventList?cursor=" + cursor + "&limit=" + limit, (data) => {
+                $("#eventTable").html("");
+                $("#eventTable").append(createTable("Events", data.data));
+                $("#pageNumber").text((cursor+limit)/limit);
+            })
+        }
+        function createTable(title, obj, level = 2) {
+            let newRow = $("<div></div>");
+            newRow.addClass("row");
+            let titleObj = $("<h" + level + "></h" + level + ">");
+            titleObj.text(title);
+            newRow.append(titleObj);
+
+
+            let appendAfter = [];
+            console.log("tableCreate Called", title)
+            let table = $("<table></table>")
+            table.addClass("table")
+            let thead = $("<thead></thead>");
+            let tbody = $("<tbody></tbody>");
+
+            thead.html("<tr></tr>");
+            for (var i in obj[0]) {
+                let col = $("<th></th>");
+                col.text(i);
+                thead.append(col)
+            }
+            table.append(thead);
+
+
+            for (var i in obj) {
+
+                let trow = $("<tr></tr>")
+                for (var j in obj[i]) {
+
+                    let tdKey = $("<td></td>");
+                    let val = obj[i][j];
+                    switch (typeof val) {
+                        case "boolean":
+                            tdKey.html('<div class="form-check"> <input class="form-check-input" type="checkbox" ' + ((val) ? "checked" : "") + '> </div>');
+                            break;
+                        default:
+                            tdKey.text(obj[i][j]);
+                    }
+                    trow.append(tdKey)
+                }
+
+                tbody.append(trow);
+
+            }
+            table.append(tbody);
+
+            newRow.append(table);
+
+            return newRow
+        }
+
+    </script>
+</head>
+
+<body onload="getEvents()">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-11">
+                <span id="eventTable"></span>
+                
+            </div>
+            <div class="row">
+                <div class="col-3">
+                <button type="button" class="btn btn-outline-secondary" id="lastPage" onclick="lastPage()"><<</button>
+                <span id="pageNumber"></span>
+                <button type="button" class="btn btn-outline-secondary" id="nextPage" onclick="nextPage()">>></button>
+                <a href="/createEvent.html"><button type="button" class="btn btn-primary">Create new event</button></a>
+            </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
