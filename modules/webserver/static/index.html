@@ -16,9 +16,23 @@
         .checks {
             font-size: 30pt;
         }
+
         .bigState {
             font-size: 70pt;
             text-align: center;
+        }
+
+        .dsgvo {
+            font-size: 10pt;
+
+        }
+        body {
+            overflow:hidden;
+            color: #fff;
+            background-color: #333;
+        }
+        table {
+            color: #fff !important;
         }
     </style>
     <script>
@@ -48,7 +62,7 @@
 
                 },
                 error => {
-                    
+
                 },
                 video => {
                     // calculate scan regon
@@ -66,7 +80,7 @@
             qrScanner.start();
         }
         function updateStatus() {
-            
+
             function createTable(title, obj, level) {
                 let appendAfter = [];
                 console.log("tableCreate Called", title)
@@ -77,10 +91,10 @@
                 thead.html("<tr><th>key</th><th>value</th></tr>");
                 table.append(thead);
                 let newRow = $("<div></div>");
-                    newRow.addClass("row");
-                    let titleObj = $("<h" + level + "></h"+level+">");
-                    titleObj.text(title);
-                    newRow.append(titleObj);
+                newRow.addClass("row");
+                let titleObj = $("<h" + level + "></h" + level + ">");
+                titleObj.text(title);
+                newRow.append(titleObj);
                 for (var i in obj) {
                     if (typeof obj[i] == "object" && obj[i] != null) {
                         appendAfter.push(createTable(i, obj[i], level + 1))
@@ -88,7 +102,7 @@
                         let trow = $("<tr></tr>")
                         let tdKey = $("<td></td>");
                         tdKey.text(i);
-                        
+
                         let tdVal = $("<td></td>")
                         tdVal.text(obj[i]);
                         trow.append(tdKey);
@@ -107,6 +121,11 @@
             }
             $.get("/api/status", data => {
                 data = JSON.parse(data);
+
+                if (data.config.debug) {
+                    $("#debugWarning").show();
+                }
+
                 let infos = $("#infos");
                 infos.html("");
 
@@ -132,15 +151,15 @@
                     switch (i) {
                         case "baseCheck":
                             $(".baseCheckNotEntered").hide();
-                            if (data.stateMachine.states[i]){
+                            if (data.stateMachine.states[i]) {
                                 $(".baseCheckValid").show();
                             } else {
                                 $(".baseCheckInvalid").show();
                             }
                             break;
-                        case "extendedCheck": 
+                        case "extendedCheck":
                             $(".extendedCheckNotEntered").hide();
-                            if (data.stateMachine.states[i]){
+                            if (data.stateMachine.states[i]) {
                                 $(".extendedCheckValid").show();
                             } else {
                                 $(".extendedCheckInvalid").show();
@@ -148,14 +167,14 @@
                             break;
                         case "idCardCheck":
                             $(".idCardCheckNotEntered").hide();
-                            if (data.stateMachine.states[i]){
+                            if (data.stateMachine.states[i]) {
                                 $(".idCardCheckValid").show();
                             } else {
                                 $(".idCardCheckInvalid").show();
                             }
                             break;
-                        default: 
-                        break;
+                        default:
+                            break;
                     }
                 }
                 if (!hasData) {
@@ -169,7 +188,7 @@
                     $(".baseCheckInvalid").hide();
                     $(".baseCheckValid").hide();
                 }
-                
+
             })
         }
         setInterval(updateStatus, 500);
@@ -179,70 +198,142 @@
 
 <body onload="qrCov()">
     <div class="container-fluid">
+        <div class="p-3 mb-2 bg-danger text-white" id="debugWarning" style="display: none;">WARNING: Running in Debug Mode. Validity of Certificates will <b>not</b> be checked.</div>
+
         <div class="row">
-            <div class="col-5">
-                <div class="row">
-                    <div class="col">
-                        <h1 id="eventName"></h1>
-                    </div>
-                    
-                    
-                </div>
+            <div class="col-6">
+
                 <div class="row mt-1">
                     <div class="col">
-                        <h4 id="entranceTypeName"></h4>
+                        <h4>AutoCovCheck</h4>
                     </div>
                 </div>
                 <div class="row mt-2 table-responsive">
 
-                
-                <table class="table table-bordered" id="checkList">
-                <thead>
-                    <tr>
-                        <th>
-                            Status
-                        </th>
-                        <th>
-                            
-                        </th>
-                    </tr>
-                </thead>
-                    
-                <tr id="baseCheck" class="checks" style="display: none;">
-                    
-                    <td class="baseCheckNotEntered">❓</td><td class="baseCheckNotEntered"> Bitte zeig dein 2G Zertifikat</td>
-                    <td class="baseCheckValid">✅ </td><td class="baseCheckValid">Zertifikat akzeptiert</td>
-                    <td class="baseCheckInvalid">❌ </td><td class="baseCheckInvalid">Zertifikat nicht akzeptiert</td>
-                    
-                </tr>
-                <tr id="extendedCheck" class="checks" style="display: none;">
-                    
-                    <td class="extendedCheckNotEntered">❓</td><td class="extendedCheckNotEntered">Bitte zeig dein Testzertifikat</td></span>
-                    <td class="extendedCheckValid" >✅</td><td class="extendedCheckValid">Test akzeptiert</td></span>
-                    <td class="extendedCheckInvalid">❌</td><td class="extendedCheckInvalid">Test nicht akzeptiert</td></span>
-                    
-                </tr>
-                <tr id="idCardCheck" class="checks" style="display: none;">
-                    
-                        <td class="idCardCheckNotEntered">❓</td>
-                        <td class="idCardCheckValid">✅</td>
-                        <td class="idCardCheckInvalid">❌</td>
-                    
-                </tr>
-                </table>
-            </div>
+
+                    <table class="table table-bordered" id="checkList">
+                        <thead>
+                            <tr>
+                                <th>
+                                    Status
+                                </th>
+                                <th>
+
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tr id="baseCheck" class="checks" style="display: none;">
+
+                            <td class="baseCheckNotEntered">❓</td>
+                            <td class="baseCheckNotEntered"> Bitte zeig dein 2G Zertifikat</td>
+                            <td class="baseCheckValid">✅ </td>
+                            <td class="baseCheckValid">Zertifikat akzeptiert</td>
+                            <td class="baseCheckInvalid">❌ </td>
+                            <td class="baseCheckInvalid">Zertifikat nicht akzeptiert</td>
+
+                        </tr>
+                        <tr id="extendedCheck" class="checks" style="display: none;">
+
+                            <td class="extendedCheckNotEntered">❓</td>
+                            <td class="extendedCheckNotEntered">Bitte zeig dein Testzertifikat</td></span>
+                            <td class="extendedCheckValid">✅</td>
+                            <td class="extendedCheckValid">Test akzeptiert</td></span>
+                            <td class="extendedCheckInvalid">❌</td>
+                            <td class="extendedCheckInvalid">Test nicht akzeptiert</td></span>
+
+                        </tr>
+                        <tr id="idCardCheck" class="checks" style="display: none;">
+
+                            <td class="idCardCheckNotEntered">❓</td>
+                            <td class="idCardCheckValid">✅</td>
+                            <td class="idCardCheckInvalid">❌</td>
+
+                        </tr>
+                    </table>
+                </div>
                 <div id="stateMachineFinished" class=" row bigState" style="display: none;">
                     ✅<br>
                     Bitte tritt ein!
                 </div>
                 <span id="infos"></span>
             </div>
-            <div class="col bg-secondary">
-                <h2>
-                    <video id="qrVideo" style="width: 100%"></video>
-                </h2>
+            <div class="col">
+                <div class="row">
+                    <h2>
+                        <video id="qrVideo" style="width: 100%"></video>
+                    </h2>
+                </div>
             </div>
         </div>
+        <div class="row">
+            <div class="col-6">
+                <div class="row">
+                    <div class="col">
+                        <h1 id="eventName"></h1>
+                    </div>
+
+
+                </div>
+                <div class="row mt-1">
+                    <div class="col">
+                        <h4 id="entranceTypeName"></h4>
+                    </div>
+                </div>
+                <div class="row fixed-bottom mb-1 mr-1">
+                    <div class="col">
+                        AutoCovCheck ist freie Software <br>
+                        Made with ❤️ at github.com/Kirschn/AutoCovCheck
+                    </div>
+                    
+                </div>
+            </div>
+            <div class="col-6">
+            <div class="row">
+                <h1>
+                    DSGVO
+                </h1>
+            </div>
+            <div class="row">
+            <div class="col-6 dsgvo">
+                <p>
+                    Die nutzende Person stimmt mit der Nutzung gemäß der DSGVO Art. 6 Abs. 1a, 1c und 1e der
+                    elektronischen Verarbeitung ihrer Personalien und
+                    Immunisierungsdaten zum Zweck der Einhaltung des Infektionsschutzgesetzes zu. <br><br>
+
+                    Informationen nach DSGVO Art. 13: <br>
+                    Verantwortlich für die Verarbeitung der Daten sind die Betreiber*innen der
+                    Einlassstation:<br><br>
+
+                    sozialpalast e.V.<br>
+                    Frauenstraße 24<br>
+                    48143 Münster<br>
+                    <br>
+                </p>
+            </div>
+            <div class="col-6 dsgvo">
+                <p>
+                    Der Zweck der Verarbeitung liegt in der Einhaltung der Corona-Schutzverordnung des Landes
+                    NRW und des Infektionsschutzgesetzes, sowie dem gesundheitlichen Wohl der
+                    Allgemeinbevölkerung.
+                    <br><br>
+                    Personenbezogene Daten werden nur zur Gültigkeitsprüfung von digitalen Impfnachweisen und
+                    Testzertifikaten im Zwischenspeicher der Einlassstation
+                    gespeichert. Die Daten werden nach dem Schließen des Schlosses wieder gelöscht. Die
+                    Speicherdauer beträgt im Schnitt unter 10 Sekunden auf flüchtigen Speichermedien.<br><br>
+
+                    Veranstalter*innen haben die Möglichkeit die Personalien (Vor- und Nachname und
+                    Geburtsdatum) zwecks einer freiwilligen Kontaktnachverfolgung zum Infektionsschutz
+                    automatisch zu speichern.
+                    Den Status der Funktion ist oben Links auf dem Bildschirm der Einlassstation zu sehen. Die
+                    Speicherdauer beträgt für die Kontaktnachverfolgungsdaten zwei Wochen.
+
+                </p>
+            </div>
+            </div>
+        </div>
+
+</div>
     </div>
 </body>
 
