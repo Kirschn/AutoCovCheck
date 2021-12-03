@@ -11,3 +11,20 @@ Das Projekt ist vollständig in Node.js als ES6 Modul implementiert. Es kann dah
  - (raspberry pi only) Automatische Signalausgabe an Türbolzen o.Ä. für vollautomatisierten Einlass
  - Deaktivierbares Protokoll von Name und Geburtsdatum zur Kontaktnachverfolgung
 
+## Installation
+
+> curl https://github.com/Kirschn/AutoCovCheck/install.sh/raw | sudo sh
+
+### Manual
+
+Clone Repo, npm install, generate SSL Certs
+
+## Usage
+
+Starte den Backend Server:
+
+> node main.js
+
+Der Server exposed einen Webservice auf :8443. Auf / wird liegt das Interface für das DCC Input Formular. Beispielimplementation wäre ein Webbrowser auf einem System mit Kamera, welches diesen Pfad automatisch aufruft. Wenn der Server auf einem Raspberry Pi läuft wird ein GPIO Pin getogglet, wenn die Testverfifikation erfolgreich war. Die Konfiguration dazu ist zu finden in config.json. 
+
+Auf /eventOverview.html lässt sich der Konfigurator für die Events finden.
