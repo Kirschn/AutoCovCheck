@@ -13,7 +13,7 @@ Das Projekt ist vollständig in Node.js als ES6 Modul implementiert. Es kann dah
 
 ## Installation
 
-> curl https://github.com/Kirschn/AutoCovCheck/install.sh/raw | sudo sh
+> curl https://raw.githubusercontent.com/Kirschn/AutoCovCheck/main/install.sh | sudo sh
 
 ### Manual
 
